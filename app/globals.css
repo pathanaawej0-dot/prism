@@ -1,0 +1,299 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Flex:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Material Design 3 Base Styles */
+@layer base {
+  * {
+    @apply border-outline-variant;
+  }
+
+  html {
+    @apply antialiased;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-surface text-on-surface font-sans;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Custom scrollbar - MD3 styled */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-container-low rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-outline-variant rounded-full;
+    transition: background-color 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-outline;
+  }
+}
+
+/* Material Design 3 Component Utilities */
+@layer components {
+  /* Surface tint elevations (MD3 uses tints instead of shadows) */
+  .surface-1 {
+    @apply bg-surface-1;
+  }
+
+  .surface-2 {
+    @apply bg-surface-2;
+  }
+
+  .surface-3 {
+    @apply bg-surface-3;
+  }
+
+  .surface-4 {
+    @apply bg-surface-4;
+  }
+
+  .surface-5 {
+    @apply bg-surface-5;
+  }
+
+  /* Glassmorphism for Living Notebook */
+  .glass {
+    @apply bg-surface-container/60 backdrop-blur-glass;
+    border: 1px solid rgba(208, 188, 255, 0.1);
+  }
+
+  .glass-hover {
+    @apply glass transition-all duration-300;
+  }
+
+  .glass-hover:hover {
+    @apply bg-surface-container-high/70;
+    border-color: rgba(208, 188, 255, 0.2);
+  }
+
+  /* MD3 Buttons */
+  .btn-filled {
+    @apply px-6 py-3 bg-primary text-primary-on rounded-full font-medium;
+    @apply transition-all duration-200 hover:shadow-elevation-2;
+    @apply active:scale-[0.98];
+  }
+
+  .btn-tonal {
+    @apply px-6 py-3 bg-secondary-container text-secondary-on-container rounded-full font-medium;
+    @apply transition-all duration-200 hover:bg-surface-container-highest;
+    @apply active:scale-[0.98];
+  }
+
+  .btn-outlined {
+    @apply px-6 py-3 border border-outline text-primary rounded-full font-medium;
+    @apply transition-all duration-200 hover:bg-primary/10;
+    @apply active:scale-[0.98];
+  }
+
+  .btn-text {
+    @apply px-4 py-2 text-primary rounded-full font-medium;
+    @apply transition-all duration-200 hover:bg-primary/10;
+  }
+
+  /* MD3 Text Fields */
+  .input-filled {
+    @apply w-full px-4 py-3 bg-surface-container-highest rounded-t-md;
+    @apply border-b-2 border-on-surface-variant;
+    @apply text-on-surface placeholder:text-on-surface-variant/60;
+    @apply focus:outline-none focus:border-primary;
+    @apply transition-colors duration-200;
+  }
+
+  .input-outlined {
+    @apply w-full px-4 py-3 bg-transparent rounded-xl;
+    @apply border border-outline;
+    @apply text-on-surface placeholder:text-on-surface-variant/60;
+    @apply focus:outline-none focus:border-primary focus:border-2;
+    @apply transition-all duration-200;
+  }
+
+  /* MD3 Cards */
+  .card-elevated {
+    @apply bg-surface-1 rounded-xl p-4;
+    @apply transition-all duration-200;
+  }
+
+  .card-filled {
+    @apply bg-surface-container-highest rounded-xl p-4;
+  }
+
+  .card-outlined {
+    @apply bg-surface border border-outline-variant rounded-xl p-4;
+  }
+
+  /* Navigation Rail */
+  .nav-rail {
+    @apply w-20 h-full bg-surface-container flex flex-col items-center py-6 gap-3;
+  }
+
+  .nav-rail-item {
+    @apply w-14 h-14 flex items-center justify-center rounded-2xl;
+    @apply text-on-surface-variant transition-all duration-200;
+    @apply hover:bg-surface-container-high;
+  }
+
+  .nav-rail-item.active {
+    @apply bg-secondary-container text-secondary-on-container;
+  }
+
+  /* Chat Bubble Styles */
+  .chat-bubble-user {
+    @apply bg-primary-container text-primary-on-container rounded-3xl rounded-br-md;
+    @apply px-4 py-3 max-w-[80%] ml-auto;
+  }
+
+  .chat-bubble-assistant {
+    @apply bg-surface-container-high text-on-surface rounded-3xl rounded-bl-md;
+    @apply px-4 py-3 max-w-[85%];
+  }
+
+  /* Tooltip (MD3 Plain) */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 bg-inverse-surface text-inverse-on-surface;
+    @apply text-sm rounded-md shadow-elevation-2;
+    @apply animate-fade-in;
+  }
+
+  /* Neural Energy Bar */
+  .energy-bar {
+    @apply h-2 rounded-full bg-surface-container-highest overflow-hidden;
+  }
+
+  .energy-fill {
+    @apply h-full rounded-full transition-all duration-500 ease-out;
+    background: linear-gradient(90deg, #D0BCFF 0%, #EFB8C8 100%);
+  }
+
+  /* Floating Action Button */
+  .fab {
+    @apply w-14 h-14 flex items-center justify-center;
+    @apply bg-primary-container text-primary-on-container;
+    @apply rounded-2xl shadow-elevation-3;
+    @apply transition-all duration-200 hover:shadow-elevation-2;
+    @apply active:scale-95;
+  }
+
+  /* Dialog/Modal (MD3) */
+  .dialog-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
+    @apply flex items-center justify-center p-4;
+  }
+
+  .dialog-content {
+    @apply bg-surface-container-high rounded-3xl p-6 max-w-md w-full;
+    @apply animate-slide-up;
+  }
+
+  /* Chip (MD3) */
+  .chip {
+    @apply inline-flex items-center gap-2 px-4 py-2;
+    @apply bg-surface-container-high text-on-surface-variant;
+    @apply rounded-lg text-sm font-medium;
+    @apply transition-all duration-200;
+  }
+
+  .chip-selected {
+    @apply bg-secondary-container text-secondary-on-container;
+  }
+}
+
+/* Markdown Styling for Notebook */
+@layer utilities {
+  .prose-notebook {
+    @apply text-on-surface;
+  }
+
+  .prose-notebook h1 {
+    @apply text-2xl font-semibold text-primary-on-container mb-4 mt-6;
+  }
+
+  .prose-notebook h2 {
+    @apply text-xl font-semibold text-on-surface mb-3 mt-5;
+  }
+
+  .prose-notebook h3 {
+    @apply text-lg font-medium text-on-surface mb-2 mt-4;
+  }
+
+  .prose-notebook p {
+    @apply text-on-surface-variant mb-3 leading-relaxed;
+  }
+
+  .prose-notebook ul {
+    @apply list-disc list-inside mb-3 space-y-1 text-on-surface-variant;
+  }
+
+  .prose-notebook ol {
+    @apply list-decimal list-inside mb-3 space-y-1 text-on-surface-variant;
+  }
+
+  .prose-notebook li {
+    @apply leading-relaxed;
+  }
+
+  .prose-notebook code {
+    @apply bg-surface-container-highest px-2 py-0.5 rounded text-tertiary text-sm;
+  }
+
+  .prose-notebook pre {
+    @apply bg-surface-container-highest p-4 rounded-xl mb-3 overflow-x-auto;
+  }
+
+  .prose-notebook pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose-notebook blockquote {
+    @apply border-l-4 border-primary pl-4 italic text-on-surface-variant/80 my-4;
+  }
+
+  .prose-notebook strong {
+    @apply font-semibold text-on-surface;
+  }
+
+  .prose-notebook a {
+    @apply text-primary underline decoration-primary/30 hover:decoration-primary;
+  }
+
+  /* Glow effect for active elements */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(208, 188, 255, 0.3);
+  }
+
+  /* Typing indicator animation */
+  .typing-dot {
+    @apply w-2 h-2 bg-primary rounded-full;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+  }
+
+  .typing-dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  .typing-dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes typingBounce {
+    0%, 80%, 100% {
+      transform: scale(0.6);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
