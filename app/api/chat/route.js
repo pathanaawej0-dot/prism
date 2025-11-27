@@ -3,7 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { getOrCreateUser, decrementEnergy } from '@/lib/db'
 import { FIRST_PRINCIPLES_SYSTEM_PROMPT } from '@/lib/gemini'
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+export const dynamic = 'force-dynamic'
 
 export async function POST(req) {
   try {
@@ -36,9 +36,12 @@ export async function POST(req) {
       await decrementEnergy(userId, 2)
     }
 
+    // Initialize Gemini inside the function
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+    
     // Build chat history for Gemini
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         maxOutputTokens: 1000,
         temperature: 0.7,
