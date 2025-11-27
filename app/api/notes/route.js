@@ -2,6 +2,8 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { extractNotes } from '@/lib/gemini'
 import { getOrCreateUser } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req) {
   try {
     const { userId } = auth()

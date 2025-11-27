@@ -1,6 +1,8 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { getOrCreateUser, setUserPro } from '@/lib/db'
-import { createOrder, PLANS, verifyPayment } from '@/lib/razorpay'
+import { createOrder, PLANS } from '@/lib/razorpay'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(req) {
   try {

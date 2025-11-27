@@ -1,5 +1,7 @@
 import { verifyWebhookSignature, mapSubscriptionStatus } from '@/lib/razorpay'
-import { updateSubscription, setUserPro, sql } from '@/lib/db'
+import { updateSubscription, setUserPro, getSQL } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(req) {
   try {
@@ -12,6 +14,7 @@ export async function POST(req) {
     }
 
     const { event, payload } = body
+    const sql = getSQL()
 
     switch (event) {
       case 'subscription.authenticated':
