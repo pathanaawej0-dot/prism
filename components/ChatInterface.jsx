@@ -4,8 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import DoubtResolver from './DoubtResolver'
 
-export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
-  const [messages, setMessages] = useState([])
+export default function ChatInterface({ onNotesUpdate, onTopicChange, initialMessages = [] }) {
+  const [messages, setMessages] = useState(initialMessages)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [selectedText, setSelectedText] = useState('')
@@ -18,6 +18,12 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages)
+    }
+  }, [initialMessages])
 
   useEffect(() => {
     scrollToBottom()

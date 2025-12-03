@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 export default function AutoNotebook({ content, topic, onSave }) {
   const [localContent, setLocalContent] = useState('')
@@ -79,6 +81,59 @@ export default function AutoNotebook({ content, topic, onSave }) {
     URL.revokeObjectURL(url)
   }
 
+  const handlePdfExport = async () => {
+    const element = document.getElementById('notebook-content')
+    if (!element) return
+
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+
+      // Add Title
+      pdf.setFillColor(30, 27, 33) // surface-1 color
+      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+      pdf.setTextColor(230, 225, 229) // on-surface
+      pdf.setFontSize(24)
+      pdf.text(topic, 20, 30)
+
+      // Use html2canvas to capture the content
+      // We'll use a virtual container to ensure consistent width for the PDF
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#1E1B21',
+        useCORS: true,
+        windowWidth: 800 // Force a width to ensure consistency
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const imgProps = pdf.getImageProperties(imgData)
+      const imgWidth = pdfWidth - 40 // 20mm margin on each side
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width
+
+      let heightLeft = imgHeight
+      let position = 40 // Start below title
+
+      // First page
+      pdf.addImage(imgData, 'PNG', 20, position, imgWidth, imgHeight)
+      heightLeft -= (pdfHeight - position - 20) // 20mm bottom margin
+
+      // Subsequent pages
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight // Negative position to shift image up
+        pdf.addPage()
+        pdf.setFillColor(30, 27, 33)
+        pdf.rect(0, 0, pdfWidth, pdfHeight, 'F')
+        pdf.addImage(imgData, 'PNG', 20, - (imgHeight - heightLeft) + 20, imgWidth, imgHeight) // 20mm top margin
+        heightLeft -= (pdfHeight - 40) // 20mm top + 20mm bottom margin
+      }
+
+      pdf.save(`${topic.toLowerCase().replace(/\s+/g, '-')}.pdf`)
+    } catch (error) {
+      console.error('PDF Export failed:', error)
+    }
+  }
+
   const handleManualSave = () => {
     saveNotebook()
   }
@@ -109,17 +164,30 @@ export default function AutoNotebook({ content, topic, onSave }) {
           )}
         </button>
         
-        <button 
-          onClick={handleExport}
-          className="btn-text text-xs md:text-sm flex items-center gap-1 md:gap-2 px-2 md:px-4"
-          title="Export as Markdown"
-          disabled={!localContent}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span className="hidden md:inline">Export</span>
-        </button>
+        <div className="flex items-center">
+            <button
+            onClick={handleExport}
+            className="btn-text text-xs md:text-sm flex items-center gap-1 md:gap-2 px-2 md:px-4"
+            title="Export as Markdown"
+            disabled={!localContent}
+            >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span className="hidden md:inline">MD</span>
+            </button>
+            <button
+            onClick={handlePdfExport}
+            className="btn-text text-xs md:text-sm flex items-center gap-1 md:gap-2 px-2 md:px-4"
+            title="Export as PDF"
+            disabled={!localContent}
+            >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <span className="hidden md:inline">PDF</span>
+            </button>
+        </div>
 
         <button 
           onClick={handleManualSave}
@@ -151,7 +219,7 @@ export default function AutoNotebook({ content, topic, onSave }) {
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
         {localContent ? (
-          <div className="p-4 md:p-6">
+          <div className="p-4 md:p-6" id="notebook-content">
             <div className="glass rounded-2xl p-4 md:p-6">
               <div className="prose-notebook text-sm md:text-base">
                 <ReactMarkdown>{localContent}</ReactMarkdown>

@@ -7,6 +7,10 @@ export default authMiddleware({
     '/sign-up(.*)',
     '/api/webhooks(.*)',
   ],
+  signInUrl: '/sign-in',
+  signUpUrl: '/sign-up',
+  afterSignInUrl: '/learn',
+  afterSignUpUrl: '/learn',
 })
 
 export const config = {
