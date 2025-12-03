@@ -105,7 +105,7 @@ export default function NotebooksPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {notebooks.map((notebook) => (
-                  <div key={notebook.id} className="card-elevated hover:bg-surface-2 transition-colors cursor-pointer group">
+                  <Link href={`/learn?notebookId=${notebook.id}`} key={notebook.id} className="card-elevated hover:bg-surface-2 transition-colors cursor-pointer group block">
                     <div className="flex items-start justify-between mb-3">
                       <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
                         <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,7 +120,7 @@ export default function NotebooksPage() {
                     <p className="text-sm text-on-surface-variant line-clamp-2">
                       {notebook.content?.slice(0, 100) || 'Empty notebook'}
                     </p>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

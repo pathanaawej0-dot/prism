@@ -1,26 +1,57 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import NavigationRail from '@/components/NavigationRail'
 import ChatInterface from '@/components/ChatInterface'
 import AutoNotebook from '@/components/AutoNotebook'
 import NeuralEnergyBar from '@/components/NeuralEnergyBar'
 
-export default function LearnPage() {
+function LearnPageContent() {
   const { isLoaded, isSignedIn } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const notebookId = searchParams.get('notebookId')
+
   const [notebookContent, setNotebookContent] = useState('')
   const [currentTopic, setCurrentTopic] = useState('New Session')
   const [showNotebook, setShowNotebook] = useState(false)
+  const [initialMessages, setInitialMessages] = useState([])
+  const [loadingNotebook, setLoadingNotebook] = useState(!!notebookId)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push('/')
     }
   }, [isLoaded, isSignedIn, router])
+
+  useEffect(() => {
+    const fetchNotebook = async () => {
+      if (!notebookId || !isSignedIn) return
+
+      try {
+        setLoadingNotebook(true)
+        const res = await fetch(`/api/notebooks/${notebookId}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.notebook) {
+            setNotebookContent(data.notebook.content || '')
+            setCurrentTopic(data.notebook.topic_title || 'Living Notebook')
+          }
+          if (data.messages) {
+            setInitialMessages(data.messages)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load notebook:', error)
+      } finally {
+        setLoadingNotebook(false)
+      }
+    }
+
+    fetchNotebook()
+  }, [notebookId, isSignedIn])
 
   const handleNotesUpdate = useCallback((newNotes) => {
     setNotebookContent(prev => prev + '\n\n' + newNotes)
@@ -72,10 +103,21 @@ export default function LearnPage() {
               <UserButton afterSignOutUrl="/" />
             </div>
           </header>
-          <ChatInterface 
-            onNotesUpdate={handleNotesUpdate}
-            onTopicChange={handleTopicChange}
-          />
+          {loadingNotebook ? (
+             <div className="flex-1 flex items-center justify-center">
+                <div className="flex gap-2">
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                </div>
+             </div>
+          ) : (
+             <ChatInterface
+                onNotesUpdate={handleNotesUpdate}
+                onTopicChange={handleTopicChange}
+                initialMessages={initialMessages}
+             />
+          )}
         </div>
 
         {/* Right Panel - Living Notebook */}
@@ -131,5 +173,21 @@ export default function LearnPage() {
         </a>
       </div>
     </div>
+  )
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center bg-surface">
+        <div className="flex gap-2">
+          <div className="typing-dot"></div>
+          <div className="typing-dot"></div>
+          <div className="typing-dot"></div>
+        </div>
+      </div>
+    }>
+      <LearnPageContent />
+    </Suspense>
   )
 }

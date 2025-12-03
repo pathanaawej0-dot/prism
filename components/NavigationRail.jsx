@@ -53,7 +53,7 @@ export default function NavigationRail() {
   return (
     <nav className="nav-rail border-r border-outline-variant/30">
       {/* Logo */}
-      <Link href="/learn" className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center mb-8 hover:bg-primary/30 transition-colors">
+      <Link href="/learn" className="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center mb-8 hover:bg-surface-container-highest transition-colors">
         <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
         </svg>
