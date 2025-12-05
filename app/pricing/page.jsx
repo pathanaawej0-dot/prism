@@ -28,7 +28,7 @@ export default function PricingPage() {
     if (!isSignedIn) {
       return
     }
-    
+
     setUpgrading(true)
     try {
       const loaded = await loadRazorpay()
@@ -39,7 +39,7 @@ export default function PricingPage() {
 
       const res = await fetch('/api/subscription', { method: 'POST' })
       const data = await res.json()
-      
+
       if (data.error) {
         alert(data.error)
         return
@@ -96,10 +96,10 @@ export default function PricingPage() {
       description: 'Perfect for getting started',
       features: [
         { text: 'Gemini AI Chat', included: true },
-        { text: '20 messages per day', included: true },
+        { text: '10 messages per day', included: true },
         { text: 'Manual note-taking', included: true },
         { text: 'Basic chat history', included: true },
-        { text: 'Auto-generated notes', included: false },
+        { text: 'Auto-generated notes', included: true },
         { text: 'Unlimited messages', included: false },
         { text: 'Priority support', included: false },
         { text: 'Export notes as PDF', included: false },
@@ -109,13 +109,13 @@ export default function PricingPage() {
     },
     {
       name: 'Flow',
-      price: '₹499',
+      price: '₹199',
       period: '/month',
-      description: 'For serious learners',
+      description: 'Unlimited access for serious learners',
       features: [
         { text: 'Gemini AI Chat', included: true },
         { text: 'Unlimited messages', included: true },
-        { text: 'Auto-generated notes', included: true },
+        { text: 'High-Quality Auto-notes', included: true },
         { text: 'Full chat history', included: true },
         { text: 'Priority support', included: true },
         { text: 'Export notes as PDF', included: true },
@@ -167,13 +167,12 @@ export default function PricingPage() {
       <div className="max-w-4xl mx-auto px-4 pb-20">
         <div className="grid md:grid-cols-2 gap-6 md:gap-8">
           {plans.map((plan) => (
-            <div 
+            <div
               key={plan.name}
-              className={`rounded-3xl p-6 md:p-8 relative ${
-                plan.popular 
-                  ? 'bg-primary/10 border-2 border-primary' 
-                  : 'bg-surface-container border border-outline-variant/30'
-              }`}
+              className={`rounded-3xl p-6 md:p-8 relative ${plan.popular
+                ? 'bg-primary/10 border-2 border-primary'
+                : 'bg-surface-container border border-outline-variant/30'
+                }`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -211,7 +210,7 @@ export default function PricingPage() {
 
               {plan.popular ? (
                 isSignedIn ? (
-                  <button 
+                  <button
                     onClick={handleUpgrade}
                     disabled={upgrading}
                     className="btn-filled w-full py-4 text-lg disabled:opacity-50"

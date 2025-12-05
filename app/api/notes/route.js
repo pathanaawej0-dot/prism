@@ -15,7 +15,7 @@ export async function POST(req) {
     const user = await getOrCreateUser(userId, clerkUser?.emailAddresses?.[0]?.emailAddress)
 
     const { message } = await req.json()
-    
+
     if (!message || message.trim().length === 0) {
       return new Response(JSON.stringify({ notes: '' }), {
         status: 200,
@@ -24,7 +24,9 @@ export async function POST(req) {
     }
 
     const notes = await extractNotes(message)
-    
+    console.log('Extracted notes length:', notes?.length)
+    console.log('Extracted notes preview:', notes?.substring(0, 100))
+
     return new Response(JSON.stringify({ notes }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

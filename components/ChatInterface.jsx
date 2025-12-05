@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import DoubtResolver from './DoubtResolver'
 
-export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
+export default function ChatInterface({ onNotesUpdate, onTopicChange, notebookId }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -15,6 +15,26 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
   const chatContainerRef = useRef(null)
   const textareaRef = useRef(null)
 
+  // Load history if notebookId is provided
+  useEffect(() => {
+    if (notebookId) {
+      const fetchHistory = async () => {
+        try {
+          const response = await fetch(`/api/chat/history?notebookId=${notebookId}`)
+          if (response.ok) {
+            const data = await response.json()
+            if (data.messages) {
+              setMessages(data.messages)
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load chat history:', error)
+        }
+      }
+      fetchHistory()
+    }
+  }, [notebookId])
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -23,58 +43,24 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
     scrollToBottom()
   }, [messages])
 
-  // Auto-resize textarea
-  const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current
-    if (textarea) {
-      textarea.style.height = 'auto'
-      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px'
-    }
-  }
-
-  useEffect(() => {
-    adjustTextareaHeight()
-  }, [input])
-
-  // Extract notes from assistant message
-  const extractNotes = useCallback(async (message) => {
+  const extractNotes = async (message) => {
     try {
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message }),
       })
-      const data = await response.json()
-      if (data.notes && data.notes.trim()) {
-        onNotesUpdate?.(data.notes)
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.notes) {
+          onNotesUpdate?.(data.notes)
+        }
       }
     } catch (error) {
       console.error('Failed to extract notes:', error)
     }
-  }, [onNotesUpdate])
-
-  // Handle text selection for doubt resolver
-  const handleTextSelection = useCallback(() => {
-    const selection = window.getSelection()
-    const text = selection?.toString().trim()
-    
-    if (text && text.length > 3) {
-      const range = selection.getRangeAt(0)
-      const rect = range.getBoundingClientRect()
-      setSelectedText(text)
-      setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.top - 10,
-      })
-    } else {
-      setSelectedText('')
-    }
-  }, [])
-
-  useEffect(() => {
-    document.addEventListener('mouseup', handleTextSelection)
-    return () => document.removeEventListener('mouseup', handleTextSelection)
-  }, [handleTextSelection])
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -82,15 +68,18 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
 
     const userMessage = input.trim()
     setInput('')
-    
+
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = '48px'
     }
-    
+
     // Detect topic from first message
-    if (messages.length === 0) {
-      onTopicChange?.(userMessage.slice(0, 50) + (userMessage.length > 50 ? '...' : ''))
+    let currentNotebookId = notebookId
+    if (messages.length === 0 && onTopicChange) {
+      const id = await onTopicChange(userMessage.slice(0, 50) + (userMessage.length > 50 ? '...' : ''))
+      if (id) currentNotebookId = id
     }
 
     const newMessages = [...messages, { role: 'user', content: userMessage }]
@@ -101,12 +90,12 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, notebookId: currentNotebookId }), // Use currentNotebookId
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.message || 'Chat request failed')
+        throw new Error(error.message || error.error || 'Chat request failed')
       }
 
       const reader = response.body.getReader()
@@ -121,7 +110,7 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
 
         const chunk = decoder.decode(value)
         const lines = chunk.split('\n').filter(Boolean)
-        
+
         for (const line of lines) {
           if (line.startsWith('0:')) {
             try {
@@ -143,11 +132,16 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
       if (assistantMessage) {
         extractNotes(assistantMessage)
       }
+      
+      // Trigger stats refresh for real-time update (with small delay to ensure DB is updated)
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('refreshStats'))
+      }, 500)
     } catch (error) {
       console.error('Chat error:', error)
-      setMessages(prev => [...prev.slice(0, -1), { 
-        role: 'assistant', 
-        content: `Something went wrong. Please try again.` 
+      setMessages(prev => [...prev.slice(0, -1), {
+        role: 'assistant',
+        content: error.message || `Something went wrong. Please try again.`
       }])
     } finally {
       setIsLoading(false)
@@ -175,7 +169,7 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative">
       {/* Messages Container */}
-      <div 
+      <div
         ref={chatContainerRef}
         className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"
       >
@@ -211,8 +205,8 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
             key={index}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}
           >
-            <div className={`${message.role === 'user' 
-              ? 'bg-primary text-primary-on rounded-2xl rounded-br-sm px-4 py-3 max-w-[85%] md:max-w-[75%]' 
+            <div className={`${message.role === 'user'
+              ? 'bg-primary text-primary-on rounded-2xl rounded-br-sm px-4 py-3 max-w-[85%] md:max-w-[75%]'
               : 'bg-surface-container-high text-on-surface rounded-2xl rounded-bl-sm px-4 py-3 max-w-[90%] md:max-w-[85%]'}`}
             >
               {message.role === 'assistant' ? (
@@ -243,15 +237,15 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
 
       {/* Selection Tooltip */}
       {selectedText && (
-        <div 
+        <div
           className="tooltip"
-          style={{ 
+          style={{
             left: tooltipPosition.x,
             top: tooltipPosition.y,
             transform: 'translate(-50%, -100%)'
           }}
         >
-          <button 
+          <button
             onClick={handleDoubtClick}
             className="flex items-center gap-2 text-inverse-on-surface hover:text-primary transition-colors"
           >
@@ -282,10 +276,14 @@ export default function ChatInterface({ onNotesUpdate, onTopicChange }) {
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value)
+                e.target.style.height = 'auto'
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`
+              }}
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything... (Shift+Enter for new line)"
-              className="w-full px-4 py-3 bg-surface-container-high rounded-2xl text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none overflow-hidden text-sm md:text-base"
+              className="w-full px-4 py-3 bg-surface-container-high rounded-2xl text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none overflow-y-auto text-sm md:text-base custom-scrollbar"
               disabled={isLoading}
               rows={1}
               style={{ minHeight: '48px', maxHeight: '200px' }}

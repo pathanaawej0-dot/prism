@@ -15,6 +15,7 @@ export default function LearnPage() {
   const [notebookContent, setNotebookContent] = useState('')
   const [currentTopic, setCurrentTopic] = useState('New Session')
   const [showNotebook, setShowNotebook] = useState(false)
+  const [notebookId, setNotebookId] = useState(null)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -22,13 +23,44 @@ export default function LearnPage() {
     }
   }, [isLoaded, isSignedIn, router])
 
-  const handleNotesUpdate = useCallback((newNotes) => {
-    setNotebookContent(prev => prev + '\n\n' + newNotes)
+  const handleTopicChange = useCallback(async (newTopic) => {
+    setCurrentTopic(newTopic)
+    // Create new notebook
+    try {
+      const res = await fetch('/api/notebooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topicTitle: newTopic }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const id = data.notebook?.id || data.id
+        if (id) {
+          setNotebookId(id)
+          return id
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create notebook:', error)
+    }
+    return null
   }, [])
 
-  const handleTopicChange = useCallback((topic) => {
-    setCurrentTopic(topic)
-  }, [])
+  const handleNotesUpdate = useCallback(async (newNotes) => {
+    setNotebookContent(prev => prev + '\n\n' + newNotes)
+
+    if (notebookId) {
+      try {
+        await fetch(`/api/notebooks/${notebookId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: newNotes, mode: 'append' }),
+        })
+      } catch (error) {
+        console.error('Failed to save notes:', error)
+      }
+    }
+  }, [notebookId])
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -48,7 +80,7 @@ export default function LearnPage() {
       <div className="hidden md:block">
         <NavigationRail />
       </div>
-      
+
       <div className="flex-1 flex flex-col md:grid md:grid-cols-12 gap-0">
         {/* Left Panel - Chat Interface */}
         <div className={`${showNotebook ? 'hidden md:flex' : 'flex'} md:col-span-7 flex-col h-screen border-r border-outline-variant/30`}>
@@ -60,7 +92,7 @@ export default function LearnPage() {
             </div>
             <div className="flex items-center gap-2 md:gap-4">
               {/* Mobile notebook toggle */}
-              <button 
+              <button
                 onClick={() => setShowNotebook(true)}
                 className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container-high text-on-surface-variant"
               >
@@ -72,9 +104,10 @@ export default function LearnPage() {
               <UserButton afterSignOutUrl="/" />
             </div>
           </header>
-          <ChatInterface 
+          <ChatInterface
             onNotesUpdate={handleNotesUpdate}
             onTopicChange={handleTopicChange}
+            notebookId={notebookId}
           />
         </div>
 
@@ -83,7 +116,7 @@ export default function LearnPage() {
           <header className="h-14 md:h-16 px-4 md:px-6 flex items-center justify-between border-b border-outline-variant/30">
             <div className="flex items-center gap-3">
               {/* Mobile back button */}
-              <button 
+              <button
                 onClick={() => setShowNotebook(false)}
                 className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high"
               >

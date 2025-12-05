@@ -62,7 +62,7 @@ export default function SettingsPage() {
 
       const res = await fetch('/api/subscription', { method: 'POST' })
       const data = await res.json()
-      
+
       if (data.error) {
         alert(data.error)
         return
@@ -170,7 +170,7 @@ export default function SettingsPage() {
             {/* Subscription Section */}
             <section className="card-elevated mb-6">
               <h2 className="text-lg font-semibold text-on-surface mb-4">Subscription</h2>
-              
+
               {loading ? (
                 <div className="flex gap-2 py-4">
                   <div className="typing-dot"></div>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
                         {subscription?.isPro ? 'Flow Plan' : 'Spark Plan'}
                       </p>
                       <p className="text-sm text-on-surface-variant">
-                        {subscription?.isPro ? '₹499/month • Unlimited' : 'Free • 20 messages/day'}
+                        {subscription?.isPro ? '₹199/month • Unlimited' : 'Free • 10 messages/day'}
                       </p>
                     </div>
                     <span className={`chip ${subscription?.isPro ? 'chip-selected' : ''}`}>
@@ -202,12 +202,12 @@ export default function SettingsPage() {
                         <li>✓ Priority support</li>
                         <li>✓ 7-day free trial</li>
                       </ul>
-                      <button 
+                      <button
                         onClick={handleUpgrade}
                         disabled={upgrading}
                         className="btn-filled w-full disabled:opacity-50"
                       >
-                        {upgrading ? 'Processing...' : 'Start Free Trial - ₹499/month'}
+                        {upgrading ? 'Processing...' : 'Start Free Trial - ₹199/month'}
                       </button>
                     </div>
                   )}
@@ -222,13 +222,13 @@ export default function SettingsPage() {
                 Share PRISM with friends and get <span className="text-primary font-semibold">+50% Neural Energy</span> for each signup!
               </p>
               <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  readOnly 
+                <input
+                  type="text"
+                  readOnly
                   value={typeof window !== 'undefined' ? `${window.location.origin}/?ref=SHARE` : ''}
                   className="input-outlined flex-1 text-sm"
                 />
-                <button 
+                <button
                   className="btn-tonal"
                   onClick={() => {
                     navigator.clipboard.writeText(`${window.location.origin}/?ref=SHARE`)

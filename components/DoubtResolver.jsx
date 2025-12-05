@@ -39,7 +39,7 @@ export default function DoubtResolver({ selectedText, context, onClose }) {
 
   return (
     <div className="dialog-overlay" onClick={onClose}>
-      <div 
+      <div
         className="dialog-content max-w-lg"
         onClick={(e) => e.stopPropagation()}
       >
@@ -56,7 +56,7 @@ export default function DoubtResolver({ selectedText, context, onClose }) {
               <p className="text-xs text-on-surface-variant">Simplified analogy</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-surface-container-highest transition-colors"
           >
@@ -89,7 +89,7 @@ export default function DoubtResolver({ selectedText, context, onClose }) {
                 </svg>
               </div>
               <p className="text-error text-sm">{error}</p>
-              <button 
+              <button
                 onClick={resolveDoubt}
                 className="btn-text mt-3"
               >
@@ -108,7 +108,7 @@ export default function DoubtResolver({ selectedText, context, onClose }) {
           <button onClick={onClose} className="btn-text">
             Got it!
           </button>
-          <button 
+          <button
             onClick={() => {
               navigator.clipboard.writeText(explanation)
             }}

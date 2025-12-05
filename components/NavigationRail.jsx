@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { 
-    id: 'learn', 
+  {
+    id: 'learn',
     href: '/learn',
     label: 'Learn',
     icon: (
@@ -14,8 +14,8 @@ const navItems = [
       </svg>
     )
   },
-  { 
-    id: 'notebooks', 
+  {
+    id: 'notebooks',
     href: '/notebooks',
     label: 'Notes',
     icon: (
@@ -24,8 +24,8 @@ const navItems = [
       </svg>
     )
   },
-  { 
-    id: 'pricing', 
+  {
+    id: 'pricing',
     href: '/pricing',
     label: 'Pricing',
     icon: (
@@ -34,8 +34,8 @@ const navItems = [
       </svg>
     )
   },
-  { 
-    id: 'settings', 
+  {
+    id: 'settings',
     href: '/settings',
     label: 'Settings',
     icon: (

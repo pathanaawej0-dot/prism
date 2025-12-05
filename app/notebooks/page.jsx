@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -12,6 +12,7 @@ export default function NotebooksPage() {
   const router = useRouter()
   const [notebooks, setNotebooks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -19,13 +20,7 @@ export default function NotebooksPage() {
     }
   }, [isLoaded, isSignedIn, router])
 
-  useEffect(() => {
-    if (isSignedIn) {
-      fetchNotebooks()
-    }
-  }, [isSignedIn])
-
-  const fetchNotebooks = async () => {
+  const fetchNotebooks = useCallback(async () => {
     try {
       const res = await fetch('/api/notebooks')
       const data = await res.json()
@@ -34,6 +29,29 @@ export default function NotebooksPage() {
       console.error('Failed to fetch notebooks:', error)
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchNotebooks()
+    }
+  }, [isSignedIn, fetchNotebooks])
+
+  const handleDelete = async (notebookId, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    try {
+      const res = await fetch(`/api/notebooks/${notebookId}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        setNotebooks(prev => prev.filter(n => n.id !== notebookId))
+        setDeleteConfirm(null)
+      }
+    } catch (error) {
+      console.error('Failed to delete notebook:', error)
     }
   }
 
@@ -54,7 +72,7 @@ export default function NotebooksPage() {
       <div className="hidden md:block">
         <NavigationRail />
       </div>
-      
+
       <div className="flex-1 flex flex-col">
         <header className="h-14 md:h-16 px-4 md:px-6 flex items-center justify-between border-b border-outline-variant/30 bg-surface-1">
           <div className="flex items-center gap-2 md:gap-4">
@@ -105,21 +123,40 @@ export default function NotebooksPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {notebooks.map((notebook) => (
-                  <div key={notebook.id} className="card-elevated hover:bg-surface-2 transition-colors cursor-pointer group">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                        <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                  <div key={notebook.id} className="relative group">
+                    <Link 
+                      href={`/notebooks/${notebook.id}`} 
+                      className="card-elevated hover:bg-surface-2 transition-colors cursor-pointer block"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                          <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <span className="text-xs text-on-surface-variant">
+                          {new Date(notebook.updated_at).toLocaleDateString()}
+                        </span>
                       </div>
-                      <span className="text-xs text-on-surface-variant">
-                        {new Date(notebook.updated_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <h3 className="font-medium text-on-surface mb-1 line-clamp-1">{notebook.topic_title}</h3>
-                    <p className="text-sm text-on-surface-variant line-clamp-2">
-                      {notebook.content?.slice(0, 100) || 'Empty notebook'}
-                    </p>
+                      <h3 className="font-medium text-on-surface mb-1 line-clamp-1">{notebook.topic_title}</h3>
+                      <p className="text-sm text-on-surface-variant line-clamp-2">
+                        {notebook.content?.slice(0, 100) || 'Empty notebook'}
+                      </p>
+                    </Link>
+                    
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setDeleteConfirm(notebook.id)
+                      }}
+                      className="absolute top-4 right-4 w-8 h-8 rounded-lg bg-surface-container-highest/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/20 hover:text-error"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -127,8 +164,34 @@ export default function NotebooksPage() {
           </div>
         </main>
 
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-surface-container-high rounded-2xl p-6 max-w-sm w-full shadow-google-xl animate-scale-in">
+              <h3 className="text-lg font-semibold text-on-surface mb-2">Delete Notebook?</h3>
+              <p className="text-on-surface-variant text-sm mb-6">
+                This will permanently delete this notebook and all its chat history. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 py-2 px-4 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-container-highest transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={(e) => handleDelete(deleteConfirm, e)}
+                  className="flex-1 py-2 px-4 rounded-lg bg-error text-white hover:bg-error/90 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Bottom Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-1 border-t border-outline-variant/30 flex items-center justify-around px-4 z-50">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-1 border-t border-outline-variant/30 flex items-center justify-around px-4 z-40">
           <Link href="/learn" className="flex flex-col items-center gap-1 text-on-surface-variant">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
